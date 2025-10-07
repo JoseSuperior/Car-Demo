@@ -126,27 +126,15 @@ struct TenantAdminHeaderView: View {
                 
                 Spacer()
                 
-                // Right Side Actions - Completely Simplified
+                // Right Side Actions - Profile Only
                 HStack(spacing: 10) {
-                    // Primary Action Button
-                    Button(action: {
-                        // Handle primary action
-                    }) {
-                        Image(systemName: primaryActionIcon)
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(.white)
-                            .frame(width: 40, height: 40)
-                            .background(Color.carPrimary)
-                            .clipShape(Circle())
-                    }
-                    
                     // Profile Menu Button
                     Menu {
                         // User Info Section
                         VStack(alignment: .leading, spacing: 4) {
-                            Text(userSession.displayName)
+                            Text(currentTenant.mainUser.fullName)
                                 .font(.system(size: 14, weight: .semibold))
-                            Text(userSession.displayEmail)
+                            Text(currentTenant.mainUser.email)
                                 .font(.system(size: 12))
                                 .foregroundColor(.textSecondary)
                         }
@@ -292,14 +280,6 @@ struct TenantAdminHeaderView: View {
         case .enterprise:
             return Color.success
         }
-    }
-    
-    private var primaryActionIcon: String {
-        currentTenant.accountType == .trial ? "sparkles" : "person.badge.plus"
-    }
-    
-    private var primaryActionTitle: String {
-        currentTenant.accountType == .trial ? "Upgrade Plan" : "Add Users"
     }
 }
 

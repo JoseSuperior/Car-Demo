@@ -56,8 +56,8 @@ struct SuperAdminDashboardView: View {
         .sheet(isPresented: $showingTenantSelector) {
             TenantSelectorView()
         }
-        .onChange(of: userSession.currentTenant) { _ in
-            if userSession.currentTenant != nil {
+        .onChange(of: userSession.currentTenant) { oldValue, newValue in
+            if newValue != nil {
                 switchingToTenantView = true
             }
         }
