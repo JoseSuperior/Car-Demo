@@ -31,16 +31,16 @@ struct LandingView: View {
     ]
     
     var body: some View {
-        GeometryReader { geometry in
-            ZStack {
-                // Background Gradient
-                LinearGradient(
-                    gradient: Gradient(colors: [Color.gradientStart, Color.gradientEnd]),
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .ignoresSafeArea()
-                
+        ZStack {
+            // Background Gradient
+            LinearGradient(
+                gradient: Gradient(colors: [Color.gradientStart, Color.gradientEnd]),
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .ignoresSafeArea()
+            
+            ScrollView(.vertical, showsIndicators: false) {
                 VStack(spacing: 0) {
                     // Header Section
                     headerSection
@@ -56,7 +56,7 @@ struct LandingView: View {
                 }
                 .padding(.horizontal, 24)
                 .padding(.top, 60)
-                .padding(.bottom, 40)
+                .padding(.bottom, 50)
             }
         }
         .sheet(isPresented: $showingLogin) {
