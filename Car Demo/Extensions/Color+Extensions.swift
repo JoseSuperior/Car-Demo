@@ -44,10 +44,16 @@ extension Color {
     static let gradientStart = Color(red: 0.21, green: 0.45, blue: 0.46) // #367376 - Teal
     static let gradientEnd = Color(red: 0.29, green: 0.58, blue: 0.60) // #4a9498 - Light Teal
     
-    // MARK: - Cartlann Care Specific Colors
-    static let carPrimary = Color(red: 0.21, green: 0.45, blue: 0.46) // #367376 - Teal
+    // MARK: - Cartlann Care Specific Colors (matching car-web)
+    static let carPrimary = Color(red: 0.21, green: 0.45, blue: 0.46) // #367376 - Teal (brand-green)
     static let carSecondary = Color(red: 0.95, green: 0.95, blue: 0.97) // Light Gray
     static let carAccent = Color(red: 0.29, green: 0.58, blue: 0.60) // #4a9498 - Light Teal
+    
+    // Additional brand colors from car-web
+    static let brandGreen = Color(red: 0.21, green: 0.45, blue: 0.46) // #367376
+    static let brandGreenLight = Color(red: 0.29, green: 0.58, blue: 0.60) // #4a9498
+    static let brandTextPrimary = Color(red: 0.11, green: 0.11, blue: 0.12) // #1C1C1E
+    static let brandTextSecondary = Color(red: 0.46, green: 0.46, blue: 0.46) // #757575
     
     // MARK: - Helper Methods
     static func hex(_ hex: String) -> Color {

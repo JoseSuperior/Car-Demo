@@ -257,10 +257,18 @@ struct LoginView: View {
     private func handleSignIn() {
         isLoading = true
         
-        // Simulate API call
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+        // Mock login - any email/password combination works
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
             isLoading = false
-            // Handle successful login
+            // Store mock login state
+            UserDefaults.standard.set(true, forKey: "isLoggedIn")
+            UserDefaults.standard.set(email, forKey: "userEmail")
+            // Determine user type based on email domain for demo purposes
+            let isSuperAdmin = email.lowercased().contains("admin") || email.lowercased().contains("super")
+            UserDefaults.standard.set(isSuperAdmin, forKey: "isSuperAdmin")
+            
+            // Notify that login state changed
+            NotificationCenter.default.post(name: .init("LoginStateChanged"), object: nil)
             dismiss()
         }
     }

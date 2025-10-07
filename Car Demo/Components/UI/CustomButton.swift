@@ -20,6 +20,7 @@ struct CustomButton: View {
         case secondary
         case outline
         case ghost
+        case destructive
     }
     
     enum ButtonSize {
@@ -94,6 +95,8 @@ struct CustomButton: View {
             return Color.clear
         case .ghost:
             return Color.clear
+        case .destructive:
+            return Color.error
         }
     }
     
@@ -107,12 +110,14 @@ struct CustomButton: View {
             return .carPrimary
         case .ghost:
             return .carPrimary
+        case .destructive:
+            return .white
         }
     }
     
     private var borderColor: Color {
         switch style {
-        case .primary, .secondary, .ghost:
+        case .primary, .secondary, .ghost, .destructive:
             return Color.clear
         case .outline:
             return Color.carPrimary

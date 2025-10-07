@@ -8,27 +8,32 @@
 import SwiftUI
 
 struct ContentView: View {
-    @State private var isFirstLaunch = true
+    @State private var isLoggedIn = false
+    @State private var isSuperAdmin = false
     
     var body: some View {
         Group {
-            if isFirstLaunch {
-                LandingView()
+            if isLoggedIn {
+                if isSuperAdmin {
+                    SuperAdminDashboardView()
+                } else {
+                    TenantAdminDashboardView()
+                }
             } else {
-                // Main app content will go here
-                MainTabView()
+                LandingView()
             }
         }
         .onAppear {
-            // Check if user is logged in
+            checkAuthenticationStatus()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .init("LoginStateChanged"))) { _ in
             checkAuthenticationStatus()
         }
     }
     
     private func checkAuthenticationStatus() {
-        // This would typically check UserDefaults or Keychain for auth token
-        // For now, we'll always show the landing view
-        isFirstLaunch = true
+        isLoggedIn = UserDefaults.standard.bool(forKey: "isLoggedIn")
+        isSuperAdmin = UserDefaults.standard.bool(forKey: "isSuperAdmin")
     }
 }
 
