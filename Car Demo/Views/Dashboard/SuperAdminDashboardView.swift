@@ -86,36 +86,28 @@ struct SuperAdminHeaderView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack(alignment: .center, spacing: 16) {
-                // Logo and Title
+                // Logo and Title - Compact
                 HStack(spacing: 12) {
-                    ZStack {
-                        Circle()
-                            .fill(
-                                LinearGradient(
-                                    gradient: Gradient(colors: [Color.carPrimary, Color.carAccent]),
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                            .frame(width: 48, height: 48)
-                            .shadow(color: Color.carPrimary.opacity(0.3), radius: 8, x: 0, y: 2)
-                        
-                        Image(systemName: "crown.fill")
-                            .font(.system(size: 20, weight: .bold))
-                            .foregroundColor(.white)
-                    }
+                    Circle()
+                        .fill(Color.carPrimary)
+                        .frame(width: 40, height: 40)
+                        .overlay(
+                            Image(systemName: "crown.fill")
+                                .font(.system(size: 16, weight: .bold))
+                                .foregroundColor(.white)
+                        )
                     
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: 3) {
                         Text("Cartlann Care")
-                            .font(.system(size: 22, weight: .bold))
+                            .font(.system(size: 16, weight: .semibold))
                             .foregroundColor(.textPrimary)
                         
-                        HStack(spacing: 6) {
+                        HStack(spacing: 4) {
                             Image(systemName: "crown")
-                                .font(.system(size: 11, weight: .medium))
+                                .font(.system(size: 9, weight: .medium))
                             
                             Text("Super Admin Dashboard")
-                                .font(.system(size: 13, weight: .medium))
+                                .font(.system(size: 11, weight: .regular))
                         }
                         .foregroundColor(.textSecondary)
                     }
@@ -123,152 +115,118 @@ struct SuperAdminHeaderView: View {
                 
                 Spacer()
                 
-                // Stats and Profile
-                HStack(spacing: 12) {
-                    // Stats Summary
-                    HStack(spacing: 20) {
-                        StatsSummaryItem(
-                            title: "Active Seats",
-                            value: "\(MockData.totalActiveSeats)",
-                            color: .carPrimary
-                        )
-                        
-                        Rectangle()
-                            .fill(Color.gray200)
-                            .frame(width: 1, height: 32)
-                        
-                        StatsSummaryItem(
-                            title: "Monthly Revenue",
-                            value: String(format: "$%.0f", MockData.totalMonthlyRevenue),
-                            color: .success
-                        )
+                // Right Side - Profile Only
+                Menu {
+                    // User Info Section
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Super Admin")
+                            .font(.system(size: 14, weight: .semibold))
+                        Text(userSession.displayEmail)
+                            .font(.system(size: 12))
+                            .foregroundColor(.textSecondary)
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 10)
-                    .background(Color.backgroundSecondary.opacity(0.5))
-                    .cornerRadius(12)
+                    .padding(.vertical, 8)
                     
-                    // Profile Menu Button
-                    Menu {
-                        // User Info Section
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Super Admin")
-                                .font(.system(size: 14, weight: .semibold))
-                            Text(userSession.displayEmail)
-                                .font(.system(size: 12))
-                                .foregroundColor(.textSecondary)
-                        }
-                        .padding(.vertical, 8)
-                        
-                        Divider()
-                        
-                        // Switch to Tenant View
-                        Button {
-                            onSwitchToTenantView()
-                        } label: {
-                            Label("Switch to Tenant View", systemImage: "building.2")
-                        }
-                        
-                        Divider()
-                        
-                        // Settings
-                        Button {
-                            // Navigate to settings
-                        } label: {
-                            Label("System Settings", systemImage: "gearshape")
-                        }
-                        
-                        // Help & Support
-                        Button {
-                            // Handle help
-                        } label: {
-                            Label("Help & Documentation", systemImage: "questionmark.circle")
-                        }
-                        
-                        Divider()
-                        
-                        // Sign Out
-                        Button(role: .destructive) {
-                            onLogout()
-                        } label: {
-                            Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
-                        }
+                    Divider()
+                    
+                    // Stats in Menu
+                    Button {
+                        // View stats
                     } label: {
-                        HStack(spacing: 10) {
-                            // Avatar with crown badge
-                            ZStack(alignment: .topTrailing) {
-                                Circle()
-                                    .fill(
-                                        LinearGradient(
-                                            gradient: Gradient(colors: [
-                                                Color.carPrimary.opacity(0.15),
-                                                Color.carPrimary.opacity(0.1)
-                                            ]),
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        )
-                                    )
-                                    .frame(width: 36, height: 36)
-                                    .overlay(
-                                        Text(userSession.displayName.prefix(1).uppercased())
-                                            .font(.system(size: 15, weight: .semibold))
-                                            .foregroundColor(.carPrimary)
-                                    )
-                                
-                                // Crown badge
-                                Circle()
-                                    .fill(Color.warning)
-                                    .frame(width: 14, height: 14)
-                                    .overlay(
-                                        Image(systemName: "crown.fill")
-                                            .font(.system(size: 7, weight: .bold))
-                                            .foregroundColor(.white)
-                                    )
-                                    .offset(x: 2, y: -2)
-                            }
-                            
-                            // Chevron
-                            Image(systemName: "chevron.down")
-                                .font(.system(size: 11, weight: .semibold))
-                                .foregroundColor(.textSecondary)
+                        HStack {
+                            Label("Active Seats: \(MockData.totalActiveSeats)", systemImage: "person.2.fill")
                         }
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
-                        .background(Color.backgroundSecondary)
-                        .cornerRadius(20)
                     }
+                    
+                    Button {
+                        // View revenue
+                    } label: {
+                        HStack {
+                            Label("Monthly Revenue: $\(String(format: "%.0f", MockData.totalMonthlyRevenue))", systemImage: "dollarsign.circle.fill")
+                        }
+                    }
+                    
+                    Divider()
+                    
+                    // Switch to Tenant View
+                    Button {
+                        onSwitchToTenantView()
+                    } label: {
+                        Label("Switch to Tenant View", systemImage: "building.2")
+                    }
+                    
+                    Divider()
+                    
+                    // Settings
+                    Button {
+                        // Navigate to settings
+                    } label: {
+                        Label("System Settings", systemImage: "gearshape")
+                    }
+                    
+                    // Help & Support
+                    Button {
+                        // Handle help
+                    } label: {
+                        Label("Help & Documentation", systemImage: "questionmark.circle")
+                    }
+                    
+                    Divider()
+                    
+                    // Sign Out
+                    Button(role: .destructive) {
+                        onLogout()
+                    } label: {
+                        Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
+                    }
+                } label: {
+                    HStack(spacing: 6) {
+                        // Avatar with crown badge
+                        ZStack(alignment: .topTrailing) {
+                            Circle()
+                                .fill(Color.carPrimary.opacity(0.15))
+                                .frame(width: 32, height: 32)
+                                .overlay(
+                                    Text(userSession.displayName.prefix(1).uppercased())
+                                        .font(.system(size: 13, weight: .semibold))
+                                        .foregroundColor(.carPrimary)
+                                )
+                            
+                            // Crown badge
+                            Circle()
+                                .fill(Color.warning)
+                                .frame(width: 12, height: 12)
+                                .overlay(
+                                    Image(systemName: "crown.fill")
+                                        .font(.system(size: 6, weight: .bold))
+                                        .foregroundColor(.white)
+                                )
+                                .offset(x: 2, y: -2)
+                        }
+                        
+                        Text(userSession.displayName)
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(.textPrimary)
+                            .lineLimit(1)
+                        
+                        Image(systemName: "chevron.down")
+                            .font(.system(size: 9, weight: .semibold))
+                            .foregroundColor(.textSecondary)
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 8)
+                    .background(Color.gray100)
+                    .clipShape(Capsule())
                 }
             }
-            .padding(.horizontal, 24)
+            .padding(.horizontal, 20)
             .padding(.vertical, 16)
-            .background(
-                Color.white
-                    .shadow(color: Color.black.opacity(0.05), radius: 1, x: 0, y: 1)
-            )
+            .background(Color.white)
             
             // Divider
             Rectangle()
                 .fill(Color.gray200.opacity(0.5))
                 .frame(height: 0.5)
-        }
-    }
-}
-
-// MARK: - Stats Summary Item
-struct StatsSummaryItem: View {
-    let title: String
-    let value: String
-    let color: Color
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(title)
-                .font(.system(size: 11, weight: .medium))
-                .foregroundColor(.textSecondary)
-            
-            Text(value)
-                .font(.system(size: 16, weight: .bold))
-                .foregroundColor(color)
         }
     }
 }
