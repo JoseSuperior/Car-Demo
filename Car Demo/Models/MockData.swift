@@ -9,7 +9,7 @@ import Foundation
 
 // MARK: - Data Models
 struct Tenant: Identifiable, Codable, Equatable {
-    let id = UUID()
+    var id = UUID()
     let practiceName: String
     let email: String
     let logoUrl: String?
@@ -25,7 +25,7 @@ struct Tenant: Identifiable, Codable, Equatable {
 }
 
 struct User: Identifiable, Codable, Equatable {
-    let id = UUID()
+    var id = UUID()
     let firstName: String
     let lastName: String
     let email: String
@@ -42,7 +42,7 @@ struct User: Identifiable, Codable, Equatable {
 }
 
 struct SubscriptionPlan: Identifiable, Codable, Equatable {
-    let id = UUID()
+    var id = UUID()
     let name: String
     let basePrice: Double
     let seatPrice: Double
@@ -52,7 +52,7 @@ struct SubscriptionPlan: Identifiable, Codable, Equatable {
 }
 
 struct EmailMessage: Identifiable, Codable, Equatable {
-    let id = UUID()
+    var id = UUID()
     let from: String
     let to: String
     let subject: String
@@ -64,7 +64,7 @@ struct EmailMessage: Identifiable, Codable, Equatable {
 }
 
 struct FileItem: Identifiable, Codable, Equatable {
-    let id = UUID()
+    var id = UUID()
     let name: String
     let type: FileType
     let size: Int64 // Size in bytes
