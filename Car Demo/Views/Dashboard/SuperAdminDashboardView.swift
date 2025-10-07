@@ -10,14 +10,20 @@ import SwiftUI
 struct SuperAdminDashboardView: View {
     @State private var selectedTab = 0
     @State private var showingLogoutAlert = false
+    @State private var switchingToTenantView = false
     
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
                 // Header
-                SuperAdminHeaderView(onLogout: {
-                    showingLogoutAlert = true
-                })
+                SuperAdminHeaderView(
+                    onLogout: {
+                        showingLogoutAlert = true
+                    },
+                    onSwitchToTenantView: {
+                        switchingToTenantView = true
+                    }
+                )
                 
                 // Tab Content
                 TabView(selection: $selectedTab) {
@@ -39,6 +45,9 @@ struct SuperAdminDashboardView: View {
             .background(Color.backgroundPrimary)
         }
         .navigationViewStyle(StackNavigationViewStyle())
+        .fullScreenCover(isPresented: $switchingToTenantView) {
+            TenantAdminDashboardView()
+        }
         .alert("Sign Out", isPresented: $showingLogoutAlert) {
             Button("Cancel", role: .cancel) { }
             Button("Sign Out", role: .destructive) {
@@ -60,10 +69,11 @@ struct SuperAdminDashboardView: View {
 // MARK: - Super Admin Header
 struct SuperAdminHeaderView: View {
     let onLogout: () -> Void
+    let onSwitchToTenantView: () -> Void
     
     var body: some View {
         VStack(spacing: 0) {
-            HStack {
+            HStack(alignment: .center, spacing: 16) {
                 // Logo and Title
                 HStack(spacing: 12) {
                     ZStack {
@@ -75,35 +85,45 @@ struct SuperAdminHeaderView: View {
                                     endPoint: .bottomTrailing
                                 )
                             )
-                            .frame(width: 40, height: 40)
+                            .frame(width: 48, height: 48)
+                            .shadow(color: Color.carPrimary.opacity(0.3), radius: 8, x: 0, y: 2)
                         
-                        Image(systemName: "cross.case.fill")
-                            .font(.system(size: 18, weight: .bold))
+                        Image(systemName: "crown.fill")
+                            .font(.system(size: 20, weight: .bold))
                             .foregroundColor(.white)
                     }
                     
-                    VStack(alignment: .leading, spacing: 2) {
+                    VStack(alignment: .leading, spacing: 4) {
                         Text("Cartlann Care")
-                            .font(.system(size: 20, weight: .bold))
+                            .font(.system(size: 22, weight: .bold))
                             .foregroundColor(.textPrimary)
                         
-                        Text("Super Admin Dashboard")
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundColor(.textSecondary)
+                        HStack(spacing: 6) {
+                            Image(systemName: "crown")
+                                .font(.system(size: 11, weight: .medium))
+                            
+                            Text("Super Admin Dashboard")
+                                .font(.system(size: 13, weight: .medium))
+                        }
+                        .foregroundColor(.textSecondary)
                     }
                 }
                 
                 Spacer()
                 
-                // User Profile and Logout
+                // Stats and Profile
                 HStack(spacing: 12) {
                     // Stats Summary
-                    HStack(spacing: 16) {
+                    HStack(spacing: 20) {
                         StatsSummaryItem(
                             title: "Active Seats",
                             value: "1,247",
                             color: .carPrimary
                         )
+                        
+                        Rectangle()
+                            .fill(Color.gray200)
+                            .frame(width: 1, height: 32)
                         
                         StatsSummaryItem(
                             title: "Monthly Revenue",
@@ -111,38 +131,113 @@ struct SuperAdminHeaderView: View {
                             color: .success
                         )
                     }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 10)
+                    .background(Color.backgroundSecondary.opacity(0.5))
+                    .cornerRadius(12)
                     
-                    // Profile Button
-                    Button(action: onLogout) {
-                        HStack(spacing: 8) {
-                            Circle()
-                                .fill(Color.carPrimary.opacity(0.1))
-                                .frame(width: 32, height: 32)
-                                .overlay(
-                                    Text(UserDefaults.standard.string(forKey: "userEmail")?.prefix(1).uppercased() ?? "A")
-                                        .font(.system(size: 14, weight: .semibold))
-                                        .foregroundColor(.carPrimary)
-                                )
-                            
-                            Image(systemName: "chevron.down")
-                                .font(.system(size: 12, weight: .medium))
+                    // Profile Menu Button
+                    Menu {
+                        // User Info Section
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Super Admin")
+                                .font(.system(size: 14, weight: .semibold))
+                            Text(UserDefaults.standard.string(forKey: "userEmail") ?? "admin@cartlann.com")
+                                .font(.system(size: 12))
                                 .foregroundColor(.textSecondary)
                         }
-                        .padding(.horizontal, 12)
                         .padding(.vertical, 8)
+                        
+                        Divider()
+                        
+                        // Switch to Tenant View
+                        Button {
+                            onSwitchToTenantView()
+                        } label: {
+                            Label("Switch to Tenant View", systemImage: "building.2")
+                        }
+                        
+                        Divider()
+                        
+                        // Settings
+                        Button {
+                            // Navigate to settings
+                        } label: {
+                            Label("System Settings", systemImage: "gearshape")
+                        }
+                        
+                        // Help & Support
+                        Button {
+                            // Handle help
+                        } label: {
+                            Label("Help & Documentation", systemImage: "questionmark.circle")
+                        }
+                        
+                        Divider()
+                        
+                        // Sign Out
+                        Button(role: .destructive) {
+                            onLogout()
+                        } label: {
+                            Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
+                        }
+                    } label: {
+                        HStack(spacing: 10) {
+                            // Avatar with crown badge
+                            ZStack(alignment: .topTrailing) {
+                                Circle()
+                                    .fill(
+                                        LinearGradient(
+                                            gradient: Gradient(colors: [
+                                                Color.carPrimary.opacity(0.15),
+                                                Color.carPrimary.opacity(0.1)
+                                            ]),
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                                    .frame(width: 36, height: 36)
+                                    .overlay(
+                                        Text(UserDefaults.standard.string(forKey: "userEmail")?.prefix(1).uppercased() ?? "A")
+                                            .font(.system(size: 15, weight: .semibold))
+                                            .foregroundColor(.carPrimary)
+                                    )
+                                
+                                // Crown badge
+                                Circle()
+                                    .fill(Color.warning)
+                                    .frame(width: 14, height: 14)
+                                    .overlay(
+                                        Image(systemName: "crown.fill")
+                                            .font(.system(size: 7, weight: .bold))
+                                            .foregroundColor(.white)
+                                    )
+                                    .offset(x: 2, y: -2)
+                            }
+                            
+                            // Chevron
+                            Image(systemName: "chevron.down")
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundColor(.textSecondary)
+                        }
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
                         .background(Color.backgroundSecondary)
                         .cornerRadius(20)
                     }
                 }
             }
-            .padding(.horizontal, 20)
+            .padding(.horizontal, 24)
             .padding(.vertical, 16)
-            .background(Color.white)
+            .background(
+                Color.white
+                    .shadow(color: Color.black.opacity(0.05), radius: 1, x: 0, y: 1)
+            )
             
             // Divider
             Rectangle()
-                .fill(Color.gray200)
-                .frame(height: 1)
+                .fill(Color.gray200.opacity(0.5))
+                .frame(height: 0.5)
         }
     }
 }

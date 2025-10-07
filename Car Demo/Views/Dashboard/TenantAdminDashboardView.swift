@@ -10,14 +10,20 @@ import SwiftUI
 struct TenantAdminDashboardView: View {
     @State private var selectedTab = 0
     @State private var showingLogoutAlert = false
+    @State private var switchingToSuperAdmin = false
     
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
                 // Header
-                TenantAdminHeaderView(onLogout: {
-                    showingLogoutAlert = true
-                })
+                TenantAdminHeaderView(
+                    onLogout: {
+                        showingLogoutAlert = true
+                    },
+                    onSwitchToSuperAdmin: {
+                        switchingToSuperAdmin = true
+                    }
+                )
                 
                 // Tab Content
                 TabView(selection: $selectedTab) {
@@ -39,6 +45,9 @@ struct TenantAdminDashboardView: View {
             .background(Color.backgroundPrimary)
         }
         .navigationViewStyle(StackNavigationViewStyle())
+        .fullScreenCover(isPresented: $switchingToSuperAdmin) {
+            SuperAdminDashboardView()
+        }
         .alert("Sign Out", isPresented: $showingLogoutAlert) {
             Button("Cancel", role: .cancel) { }
             Button("Sign Out", role: .destructive) {
@@ -60,135 +69,210 @@ struct TenantAdminDashboardView: View {
 // MARK: - Tenant Admin Header
 struct TenantAdminHeaderView: View {
     let onLogout: () -> Void
+    let onSwitchToSuperAdmin: () -> Void
     @State private var currentTenant = MockData.tenants.first!
+    @State private var showingProfileMenu = false
+    @State private var isSuperAdmin = UserDefaults.standard.bool(forKey: "isSuperAdmin")
     
     var body: some View {
         VStack(spacing: 0) {
-            HStack {
+            // Main Header
+            HStack(alignment: .center, spacing: 16) {
                 // Practice Logo and Info
                 HStack(spacing: 12) {
+                    // Logo with shadow
                     AsyncImage(url: URL(string: currentTenant.logoUrl ?? "")) { image in
                         image
                             .resizable()
                             .aspectRatio(contentMode: .fill)
                     } placeholder: {
-                        Circle()
-                            .fill(Color.carPrimary.opacity(0.1))
-                            .overlay(
-                                Text(currentTenant.practiceName.prefix(1).uppercased())
-                                    .font(.system(size: 18, weight: .semibold))
-                                    .foregroundColor(.carPrimary)
-                            )
+                        ZStack {
+                            Circle()
+                                .fill(
+                                    LinearGradient(
+                                        gradient: Gradient(colors: [
+                                            Color.carPrimary.opacity(0.8),
+                                            Color.carPrimary
+                                        ]),
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                            
+                            Text(currentTenant.practiceName.prefix(1).uppercased())
+                                .font(.system(size: 20, weight: .bold))
+                                .foregroundColor(.white)
+                        }
                     }
-                    .frame(width: 40, height: 40)
+                    .frame(width: 48, height: 48)
                     .clipShape(Circle())
+                    .shadow(color: Color.carPrimary.opacity(0.3), radius: 8, x: 0, y: 2)
                     
-                    VStack(alignment: .leading, spacing: 2) {
+                    VStack(alignment: .leading, spacing: 4) {
                         Text(currentTenant.practiceName)
-                            .font(.system(size: 20, weight: .bold))
+                            .font(.system(size: 22, weight: .bold))
                             .foregroundColor(.textPrimary)
+                            .lineLimit(1)
                         
-                        Text("Tenant Dashboard")
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundColor(.textSecondary)
+                        HStack(spacing: 6) {
+                            Image(systemName: "building.2")
+                                .font(.system(size: 11, weight: .medium))
+                            
+                            Text("Tenant Dashboard")
+                                .font(.system(size: 13, weight: .medium))
+                        }
+                        .foregroundColor(.textSecondary)
                     }
                 }
                 
                 Spacer()
                 
-                // Action Buttons and Profile
-                HStack(spacing: 12) {
-                    // File Manager Button
+                // Action Buttons
+                HStack(spacing: 10) {
+                    // Account Type Badge (iOS style)
+                    HStack(spacing: 6) {
+                        Circle()
+                            .fill(accountTypeColor)
+                            .frame(width: 6, height: 6)
+                        
+                        Text(currentTenant.accountType.displayName)
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(.textPrimary)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 7)
+                    .background(accountTypeColor.opacity(0.1))
+                    .cornerRadius(20)
+                    
+                    // Primary Action Button
                     Button(action: {
-                        // Handle file manager
+                        // Handle primary action
                     }) {
                         HStack(spacing: 6) {
-                            Image(systemName: "folder.fill")
-                                .font(.system(size: 14))
+                            Image(systemName: primaryActionIcon)
+                                .font(.system(size: 14, weight: .semibold))
                             
-                            Text("Files")
-                                .font(.system(size: 14, weight: .medium))
+                            Text(primaryActionTitle)
+                                .font(.system(size: 14, weight: .semibold))
                         }
-                        .foregroundColor(.textPrimary)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(Color.backgroundSecondary)
-                        .cornerRadius(8)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
+                        .background(
+                            LinearGradient(
+                                gradient: Gradient(colors: [Color.carPrimary, Color.carPrimary.opacity(0.85)]),
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                        .cornerRadius(10)
+                        .shadow(color: Color.carPrimary.opacity(0.3), radius: 6, x: 0, y: 3)
                     }
                     
-                    // Buy Seats / Upgrade Button
-                    if currentTenant.accountType == .trial {
-                        Button(action: {
-                            // Handle upgrade
-                        }) {
-                            HStack(spacing: 6) {
-                                Image(systemName: "creditcard.fill")
-                                    .font(.system(size: 14))
-                                
-                                Text("Upgrade")
-                                    .font(.system(size: 14, weight: .semibold))
-                            }
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(Color.carPrimary)
-                            .cornerRadius(8)
-                        }
-                    } else {
-                        Button(action: {
-                            // Handle buy seats
-                        }) {
-                            HStack(spacing: 6) {
-                                Image(systemName: "person.badge.plus")
-                                    .font(.system(size: 14))
-                                
-                                Text("Buy Seats")
-                                    .font(.system(size: 14, weight: .semibold))
-                            }
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(Color.carPrimary)
-                            .cornerRadius(8)
-                        }
-                    }
-                    
-                    // Profile Button
-                    Button(action: onLogout) {
-                        HStack(spacing: 8) {
-                            Circle()
-                                .fill(Color.carPrimary.opacity(0.1))
-                                .frame(width: 32, height: 32)
-                                .overlay(
-                                    Text(currentTenant.mainUser.firstName.prefix(1).uppercased())
-                                        .font(.system(size: 14, weight: .semibold))
-                                        .foregroundColor(.carPrimary)
-                                )
-                            
-                            Image(systemName: "chevron.down")
-                                .font(.system(size: 12, weight: .medium))
+                    // Profile Menu Button
+                    Menu {
+                        // User Info Section
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(currentTenant.mainUser.fullName)
+                                .font(.system(size: 14, weight: .semibold))
+                            Text(currentTenant.mainUser.email)
+                                .font(.system(size: 12))
                                 .foregroundColor(.textSecondary)
                         }
-                        .padding(.horizontal, 12)
                         .padding(.vertical, 8)
+                        
+                        Divider()
+                        
+                        // Switch to Super Admin (only if user has permissions)
+                        if isSuperAdmin {
+                            Button {
+                                onSwitchToSuperAdmin()
+                            } label: {
+                                Label("Switch to Super Admin", systemImage: "crown.fill")
+                            }
+                            
+                            Divider()
+                        }
+                        
+                        // Settings
+                        Button {
+                            // Navigate to settings
+                        } label: {
+                            Label("Account Settings", systemImage: "gearshape")
+                        }
+                        
+                        // Help & Support
+                        Button {
+                            // Handle help
+                        } label: {
+                            Label("Help & Support", systemImage: "questionmark.circle")
+                        }
+                        
+                        Divider()
+                        
+                        // Sign Out
+                        Button(role: .destructive) {
+                            onLogout()
+                        } label: {
+                            Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
+                        }
+                    } label: {
+                        HStack(spacing: 10) {
+                            // Avatar
+                            ZStack {
+                                Circle()
+                                    .fill(
+                                        LinearGradient(
+                                            gradient: Gradient(colors: [
+                                                Color.carPrimary.opacity(0.15),
+                                                Color.carPrimary.opacity(0.1)
+                                            ]),
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                                    .frame(width: 36, height: 36)
+                                
+                                Text(currentTenant.mainUser.firstName.prefix(1).uppercased())
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .foregroundColor(.carPrimary)
+                            }
+                            
+                            // Chevron
+                            Image(systemName: "chevron.down")
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundColor(.textSecondary)
+                        }
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
                         .background(Color.backgroundSecondary)
                         .cornerRadius(20)
                     }
                 }
             }
-            .padding(.horizontal, 20)
+            .padding(.horizontal, 24)
             .padding(.vertical, 16)
-            .background(Color.white)
+            .background(
+                Color.white
+                    .shadow(color: Color.black.opacity(0.05), radius: 1, x: 0, y: 1)
+            )
             
             // Account Status Banner (if needed)
             if currentTenant.missedPayment {
-                HStack {
+                HStack(spacing: 12) {
                     Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(.error)
                     
-                    Text("Payment failed - Please update your payment method")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(.error)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Payment Issue")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.error)
+                        
+                        Text("Your payment failed. Please update your payment method to avoid service interruption.")
+                            .font(.system(size: 13))
+                            .foregroundColor(.error.opacity(0.9))
+                    }
                     
                     Spacer()
                     
@@ -197,21 +281,41 @@ struct TenantAdminHeaderView: View {
                     }
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.white)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
                     .background(Color.error)
-                    .cornerRadius(6)
+                    .cornerRadius(8)
                 }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 12)
-                .background(Color.error.opacity(0.1))
+                .padding(.horizontal, 24)
+                .padding(.vertical, 14)
+                .background(Color.error.opacity(0.08))
             }
             
             // Divider
             Rectangle()
-                .fill(Color.gray200)
-                .frame(height: 1)
+                .fill(Color.gray200.opacity(0.5))
+                .frame(height: 0.5)
         }
+    }
+    
+    // Helper computed properties
+    private var accountTypeColor: Color {
+        switch currentTenant.accountType {
+        case .trial:
+            return Color.warning
+        case .premium:
+            return Color.carPrimary
+        case .enterprise:
+            return Color.success
+        }
+    }
+    
+    private var primaryActionIcon: String {
+        currentTenant.accountType == .trial ? "sparkles" : "person.badge.plus"
+    }
+    
+    private var primaryActionTitle: String {
+        currentTenant.accountType == .trial ? "Upgrade Plan" : "Add Users"
     }
 }
 
