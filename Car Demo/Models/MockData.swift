@@ -430,8 +430,87 @@ struct MockData {
             profileImageUrl: nil,
             isActive: false,
             dateJoined: Calendar.current.date(byAdding: .month, value: -3, to: Date()) ?? Date()
+        ),
+        User(
+            firstName: "Dr. Amanda",
+            lastName: "Wilson",
+            email: "amanda.wilson@pedwellness.com",
+            phone: "+1 (555) 777-8888",
+            role: .user,
+            specialty: "Pediatrics",
+            profileImageUrl: nil,
+            isActive: true,
+            dateJoined: Calendar.current.date(byAdding: .month, value: -2, to: Date()) ?? Date()
+        ),
+        User(
+            firstName: "Dr. Kevin",
+            lastName: "Martinez",
+            email: "kevin.martinez@orthosports.com",
+            phone: "+1 (555) 999-0000",
+            role: .admin,
+            specialty: "Orthopedics",
+            profileImageUrl: nil,
+            isActive: true,
+            dateJoined: Calendar.current.date(byAdding: .month, value: -7, to: Date()) ?? Date()
+        ),
+        User(
+            firstName: "Nurse Jennifer",
+            lastName: "Lee",
+            email: "jennifer.lee@familymed.com",
+            phone: "+1 (555) 123-9876",
+            role: .user,
+            specialty: nil,
+            profileImageUrl: nil,
+            isActive: true,
+            dateJoined: Calendar.current.date(byAdding: .month, value: -9, to: Date()) ?? Date()
+        ),
+        User(
+            firstName: "Dr. Patricia",
+            lastName: "Garcia",
+            email: "patricia.garcia@dermspec.com",
+            phone: "+1 (555) 456-1234",
+            role: .user,
+            specialty: "Dermatology",
+            profileImageUrl: nil,
+            isActive: true,
+            dateJoined: Calendar.current.date(byAdding: .month, value: -3, to: Date()) ?? Date()
         )
     ]
+    
+    // MARK: - Helper function to get users for a specific tenant
+    static func getUsersForTenant(_ tenant: Tenant) -> [User] {
+        switch tenant.practiceName {
+        case "Heart Care Medical Center":
+            return [
+                tenant.mainUser,
+                tenantUsers[0], // Dr. John Smith
+                tenantUsers[1], // Nurse Mary Davis
+                tenantUsers[2]  // Dr. Robert Brown
+            ]
+        case "Pediatric Wellness Clinic":
+            return [
+                tenant.mainUser,
+                tenantUsers[3]  // Dr. Amanda Wilson
+            ]
+        case "Orthopedic Sports Medicine":
+            return [
+                tenant.mainUser,
+                tenantUsers[4]  // Dr. Kevin Martinez
+            ]
+        case "Family Medicine Associates":
+            return [
+                tenant.mainUser,
+                tenantUsers[5]  // Nurse Jennifer Lee
+            ]
+        case "Dermatology Specialists":
+            return [
+                tenant.mainUser,
+                tenantUsers[6]  // Dr. Patricia Garcia
+            ]
+        default:
+            return [tenant.mainUser]
+        }
+    }
     
     // MARK: - File Management Data
     static let fileItems: [FileItem] = [

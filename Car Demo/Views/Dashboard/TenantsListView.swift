@@ -12,6 +12,7 @@ struct TenantsListView: View {
     @State private var sortBy: SortOption = .practiceName
     @State private var sortOrder: SortOrder = .ascending
     @State private var showingAddTenant = false
+    @State private var selectedTenant: Tenant?
     
     private let mockTenants = MockData.tenants
     
@@ -130,7 +131,7 @@ struct TenantsListView: View {
                     ForEach(filteredAndSortedTenants) { tenant in
                         TenantRowView(tenant: tenant)
                             .onTapGesture {
-                                // Navigate to tenant detail
+                                selectedTenant = tenant
                             }
                     }
                 }
@@ -141,6 +142,9 @@ struct TenantsListView: View {
         }
         .sheet(isPresented: $showingAddTenant) {
             AddTenantView()
+        }
+        .fullScreenCover(item: $selectedTenant) { tenant in
+            TenantDetailView(tenant: tenant)
         }
     }
 }
