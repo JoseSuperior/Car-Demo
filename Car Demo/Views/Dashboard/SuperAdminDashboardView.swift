@@ -8,9 +8,11 @@
 import SwiftUI
 
 struct SuperAdminDashboardView: View {
+    @EnvironmentObject var userSession: UserSession
     @State private var selectedTab = 0
     @State private var showingLogoutAlert = false
     @State private var switchingToTenantView = false
+    @State private var showingTenantSelector = false
     
     var body: some View {
         NavigationView {
@@ -21,7 +23,7 @@ struct SuperAdminDashboardView: View {
                         showingLogoutAlert = true
                     },
                     onSwitchToTenantView: {
-                        switchingToTenantView = true
+                        showingTenantSelector = true
                     }
                 )
                 
@@ -33,8 +35,11 @@ struct SuperAdminDashboardView: View {
                     SubscriptionManagementView()
                         .tag(1)
                     
-                    InboxView()
+                    FileManagerView()
                         .tag(2)
+                    
+                    InboxView()
+                        .tag(3)
                 }
                 .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
                 
@@ -48,6 +53,14 @@ struct SuperAdminDashboardView: View {
         .fullScreenCover(isPresented: $switchingToTenantView) {
             TenantAdminDashboardView()
         }
+        .sheet(isPresented: $showingTenantSelector) {
+            TenantSelectorView()
+        }
+        .onChange(of: userSession.currentTenant) { _ in
+            if userSession.currentTenant != nil {
+                switchingToTenantView = true
+            }
+        }
         .alert("Sign Out", isPresented: $showingLogoutAlert) {
             Button("Cancel", role: .cancel) { }
             Button("Sign Out", role: .destructive) {
@@ -59,15 +72,14 @@ struct SuperAdminDashboardView: View {
     }
     
     private func handleLogout() {
-        UserDefaults.standard.removeObject(forKey: "isLoggedIn")
-        UserDefaults.standard.removeObject(forKey: "isSuperAdmin")
-        UserDefaults.standard.removeObject(forKey: "userEmail")
+        userSession.logout()
         NotificationCenter.default.post(name: .init("LoginStateChanged"), object: nil)
     }
 }
 
 // MARK: - Super Admin Header
 struct SuperAdminHeaderView: View {
+    @EnvironmentObject var userSession: UserSession
     let onLogout: () -> Void
     let onSwitchToTenantView: () -> Void
     
@@ -117,7 +129,7 @@ struct SuperAdminHeaderView: View {
                     HStack(spacing: 20) {
                         StatsSummaryItem(
                             title: "Active Seats",
-                            value: "1,247",
+                            value: "\(MockData.totalActiveSeats)",
                             color: .carPrimary
                         )
                         
@@ -127,7 +139,7 @@ struct SuperAdminHeaderView: View {
                         
                         StatsSummaryItem(
                             title: "Monthly Revenue",
-                            value: "$45,890",
+                            value: String(format: "$%.0f", MockData.totalMonthlyRevenue),
                             color: .success
                         )
                     }
@@ -142,7 +154,7 @@ struct SuperAdminHeaderView: View {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Super Admin")
                                 .font(.system(size: 14, weight: .semibold))
-                            Text(UserDefaults.standard.string(forKey: "userEmail") ?? "admin@cartlann.com")
+                            Text(userSession.displayEmail)
                                 .font(.system(size: 12))
                                 .foregroundColor(.textSecondary)
                         }
@@ -198,7 +210,7 @@ struct SuperAdminHeaderView: View {
                                     )
                                     .frame(width: 36, height: 36)
                                     .overlay(
-                                        Text(UserDefaults.standard.string(forKey: "userEmail")?.prefix(1).uppercased() ?? "A")
+                                        Text(userSession.displayName.prefix(1).uppercased())
                                             .font(.system(size: 15, weight: .semibold))
                                             .foregroundColor(.carPrimary)
                                     )
@@ -268,6 +280,7 @@ struct SuperAdminTabBar: View {
     private let tabs = [
         ("Tenants", "building.2.fill"),
         ("Subscriptions", "creditcard.fill"),
+        ("Files", "folder.fill"),
         ("Inbox", "envelope.fill")
     ]
     

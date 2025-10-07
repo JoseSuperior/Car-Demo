@@ -8,7 +8,7 @@
 import Foundation
 
 // MARK: - Data Models
-struct Tenant: Identifiable, Codable {
+struct Tenant: Identifiable, Codable, Equatable {
     let id = UUID()
     let practiceName: String
     let email: String
@@ -24,7 +24,7 @@ struct Tenant: Identifiable, Codable {
     let lastPaymentDate: Date?
 }
 
-struct User: Identifiable, Codable {
+struct User: Identifiable, Codable, Equatable {
     let id = UUID()
     let firstName: String
     let lastName: String
@@ -41,7 +41,7 @@ struct User: Identifiable, Codable {
     }
 }
 
-struct SubscriptionPlan: Identifiable, Codable {
+struct SubscriptionPlan: Identifiable, Codable, Equatable {
     let id = UUID()
     let name: String
     let basePrice: Double
@@ -51,7 +51,7 @@ struct SubscriptionPlan: Identifiable, Codable {
     let createdDate: Date
 }
 
-struct EmailMessage: Identifiable, Codable {
+struct EmailMessage: Identifiable, Codable, Equatable {
     let id = UUID()
     let from: String
     let to: String
@@ -61,6 +61,64 @@ struct EmailMessage: Identifiable, Codable {
     let isRead: Bool
     let isImportant: Bool
     let attachments: [String]
+}
+
+struct FileItem: Identifiable, Codable, Equatable {
+    let id = UUID()
+    let name: String
+    let type: FileType
+    let size: Int64 // Size in bytes
+    let dateCreated: Date
+    let dateModified: Date
+    let owner: String
+    let tenantId: UUID?
+    let isShared: Bool
+    let downloadCount: Int
+    let path: String
+    
+    var sizeFormatted: String {
+        return ByteCountFormatter.string(fromByteCount: size, countStyle: .file)
+    }
+}
+
+enum FileType: String, CaseIterable, Codable {
+    case document = "document"
+    case image = "image"
+    case video = "video"
+    case audio = "audio"
+    case pdf = "pdf"
+    case spreadsheet = "spreadsheet"
+    case presentation = "presentation"
+    case archive = "archive"
+    case other = "other"
+    
+    var icon: String {
+        switch self {
+        case .document: return "doc.text.fill"
+        case .image: return "photo.fill"
+        case .video: return "video.fill"
+        case .audio: return "music.note"
+        case .pdf: return "doc.richtext.fill"
+        case .spreadsheet: return "tablecells.fill"
+        case .presentation: return "rectangle.stack.fill"
+        case .archive: return "archivebox.fill"
+        case .other: return "doc.fill"
+        }
+    }
+    
+    var color: String {
+        switch self {
+        case .document: return "blue"
+        case .image: return "green"
+        case .video: return "purple"
+        case .audio: return "orange"
+        case .pdf: return "red"
+        case .spreadsheet: return "teal"
+        case .presentation: return "indigo"
+        case .archive: return "gray"
+        case .other: return "gray"
+        }
+    }
 }
 
 // MARK: - Enums
@@ -87,6 +145,40 @@ enum UserRole: String, CaseIterable, Codable {
 
 // MARK: - Mock Data
 struct MockData {
+    
+    // MARK: - Super Admin Data
+    static let superAdminUser = User(
+        firstName: "Super",
+        lastName: "Admin",
+        email: "superadmin@cartlann.com",
+        phone: "+1 (555) 000-0000",
+        role: .superAdmin,
+        specialty: nil,
+        profileImageUrl: nil,
+        isActive: true,
+        dateJoined: Calendar.current.date(byAdding: .year, value: -2, to: Date()) ?? Date()
+    )
+    
+    // MARK: - Global Statistics for Super Admin
+    static var totalActiveSeats: Int {
+        return tenants.reduce(0) { $0 + $1.activeSeats }
+    }
+    
+    static var totalMonthlyRevenue: Double {
+        return tenants.reduce(0) { $0 + $1.monthlyRevenue }
+    }
+    
+    static var totalYTDRevenue: Double {
+        return tenants.reduce(0) { $0 + $1.ytdRevenue }
+    }
+    
+    static var activeTenants: Int {
+        return tenants.filter { !$0.missedPayment }.count
+    }
+    
+    static var tenantsWithIssues: Int {
+        return tenants.filter { $0.missedPayment }.count
+    }
     static let tenants: [Tenant] = [
         Tenant(
             practiceName: "Heart Care Medical Center",
@@ -340,4 +432,149 @@ struct MockData {
             dateJoined: Calendar.current.date(byAdding: .month, value: -3, to: Date()) ?? Date()
         )
     ]
+    
+    // MARK: - File Management Data
+    static let fileItems: [FileItem] = [
+        FileItem(
+            name: "Patient_Records_Q3_2024.pdf",
+            type: .pdf,
+            size: 2_456_789,
+            dateCreated: Calendar.current.date(byAdding: .day, value: -15, to: Date()) ?? Date(),
+            dateModified: Calendar.current.date(byAdding: .day, value: -2, to: Date()) ?? Date(),
+            owner: "Dr. Lisa Thompson",
+            tenantId: tenants[0].id,
+            isShared: true,
+            downloadCount: 23,
+            path: "/documents/medical/patient_records_q3_2024.pdf"
+        ),
+        FileItem(
+            name: "Compliance_Report_2024.docx",
+            type: .document,
+            size: 1_234_567,
+            dateCreated: Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date(),
+            dateModified: Calendar.current.date(byAdding: .day, value: -5, to: Date()) ?? Date(),
+            owner: "Sarah Johnson",
+            tenantId: tenants[0].id,
+            isShared: false,
+            downloadCount: 8,
+            path: "/documents/compliance/compliance_report_2024.docx"
+        ),
+        FileItem(
+            name: "Training_Video_New_Staff.mp4",
+            type: .video,
+            size: 45_678_901,
+            dateCreated: Calendar.current.date(byAdding: .day, value: -45, to: Date()) ?? Date(),
+            dateModified: Calendar.current.date(byAdding: .day, value: -45, to: Date()) ?? Date(),
+            owner: "Michael Chen",
+            tenantId: tenants[1].id,
+            isShared: true,
+            downloadCount: 156,
+            path: "/media/training/training_video_new_staff.mp4"
+        ),
+        FileItem(
+            name: "Financial_Analysis_Q4.xlsx",
+            type: .spreadsheet,
+            size: 987_654,
+            dateCreated: Calendar.current.date(byAdding: .day, value: -7, to: Date()) ?? Date(),
+            dateModified: Calendar.current.date(byAdding: .day, value: -1, to: Date()) ?? Date(),
+            owner: "Emily Rodriguez",
+            tenantId: tenants[2].id,
+            isShared: true,
+            downloadCount: 12,
+            path: "/documents/financial/financial_analysis_q4.xlsx"
+        ),
+        FileItem(
+            name: "System_Backup_Archive.zip",
+            type: .archive,
+            size: 123_456_789,
+            dateCreated: Calendar.current.date(byAdding: .day, value: -60, to: Date()) ?? Date(),
+            dateModified: Calendar.current.date(byAdding: .day, value: -60, to: Date()) ?? Date(),
+            owner: "System Admin",
+            tenantId: nil, // Global file
+            isShared: false,
+            downloadCount: 3,
+            path: "/system/backups/system_backup_archive.zip"
+        ),
+        FileItem(
+            name: "Marketing_Presentation.pptx",
+            type: .presentation,
+            size: 8_765_432,
+            dateCreated: Calendar.current.date(byAdding: .day, value: -20, to: Date()) ?? Date(),
+            dateModified: Calendar.current.date(byAdding: .day, value: -10, to: Date()) ?? Date(),
+            owner: "David Kim",
+            tenantId: tenants[3].id,
+            isShared: true,
+            downloadCount: 45,
+            path: "/documents/marketing/marketing_presentation.pptx"
+        ),
+        FileItem(
+            name: "Patient_Intake_Form.pdf",
+            type: .pdf,
+            size: 234_567,
+            dateCreated: Calendar.current.date(byAdding: .day, value: -90, to: Date()) ?? Date(),
+            dateModified: Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date(),
+            owner: "Jennifer Wilson",
+            tenantId: tenants[4].id,
+            isShared: true,
+            downloadCount: 89,
+            path: "/forms/patient_intake_form.pdf"
+        ),
+        FileItem(
+            name: "Equipment_Manual.pdf",
+            type: .pdf,
+            size: 5_432_109,
+            dateCreated: Calendar.current.date(byAdding: .day, value: -120, to: Date()) ?? Date(),
+            dateModified: Calendar.current.date(byAdding: .day, value: -120, to: Date()) ?? Date(),
+            owner: "Technical Support",
+            tenantId: nil, // Global file
+            isShared: true,
+            downloadCount: 67,
+            path: "/manuals/equipment_manual.pdf"
+        ),
+        FileItem(
+            name: "Office_Photos.jpg",
+            type: .image,
+            size: 3_456_789,
+            dateCreated: Calendar.current.date(byAdding: .day, value: -180, to: Date()) ?? Date(),
+            dateModified: Calendar.current.date(byAdding: .day, value: -180, to: Date()) ?? Date(),
+            owner: "Marketing Team",
+            tenantId: tenants[0].id,
+            isShared: false,
+            downloadCount: 15,
+            path: "/media/images/office_photos.jpg"
+        ),
+        FileItem(
+            name: "Policy_Updates_Audio.mp3",
+            type: .audio,
+            size: 12_345_678,
+            dateCreated: Calendar.current.date(byAdding: .day, value: -25, to: Date()) ?? Date(),
+            dateModified: Calendar.current.date(byAdding: .day, value: -25, to: Date()) ?? Date(),
+            owner: "HR Department",
+            tenantId: nil, // Global file
+            isShared: true,
+            downloadCount: 34,
+            path: "/media/audio/policy_updates_audio.mp3"
+        )
+    ]
+    
+    // MARK: - Computed Properties for File Statistics
+    static var totalFiles: Int {
+        return fileItems.count
+    }
+    
+    static var totalFileSize: Int64 {
+        return fileItems.reduce(0) { $0 + $1.size }
+    }
+    
+    static var totalFileSizeFormatted: String {
+        return ByteCountFormatter.string(fromByteCount: totalFileSize, countStyle: .file)
+    }
+    
+    static var filesByType: [FileType: Int] {
+        var counts: [FileType: Int] = [:]
+        for type in FileType.allCases {
+            counts[type] = fileItems.filter { $0.type == type }.count
+        }
+        return counts
+    }
 }

@@ -8,32 +8,38 @@
 import SwiftUI
 
 struct ContentView: View {
-    @State private var isLoggedIn = false
-    @State private var isSuperAdmin = false
+    @StateObject private var userSession = UserSession.shared
     
     var body: some View {
         Group {
-            if isLoggedIn {
-                if isSuperAdmin {
-                    SuperAdminDashboardView()
-                } else {
-                    TenantAdminDashboardView()
-                }
+            if userSession.isLoggedIn {
+                DashboardContainerView()
+                    .environmentObject(userSession)
             } else {
                 LandingView()
+                    .environmentObject(userSession)
             }
         }
-        .onAppear {
-            checkAuthenticationStatus()
-        }
         .onReceive(NotificationCenter.default.publisher(for: .init("LoginStateChanged"))) { _ in
-            checkAuthenticationStatus()
+            // UserSession will handle the state changes automatically
         }
     }
+}
+
+// MARK: - Dashboard Container
+struct DashboardContainerView: View {
+    @EnvironmentObject var userSession: UserSession
     
-    private func checkAuthenticationStatus() {
-        isLoggedIn = UserDefaults.standard.bool(forKey: "isLoggedIn")
-        isSuperAdmin = UserDefaults.standard.bool(forKey: "isSuperAdmin")
+    var body: some View {
+        Group {
+            if userSession.isSuperAdmin && userSession.currentTenant == nil {
+                // Super Admin view - managing all tenants
+                SuperAdminDashboardView()
+            } else {
+                // Tenant view - either regular tenant or super admin viewing a specific tenant
+                TenantAdminDashboardView()
+            }
+        }
     }
 }
 

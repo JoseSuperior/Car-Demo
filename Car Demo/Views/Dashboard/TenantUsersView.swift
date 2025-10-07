@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct TenantUsersView: View {
+    @EnvironmentObject var userSession: UserSession
     @State private var searchText = ""
     @State private var sortBy: UserSortOption = .firstName
     @State private var sortOrder: SortOrder = .ascending
@@ -15,7 +16,14 @@ struct TenantUsersView: View {
     @State private var selectedUser: User?
     @State private var showingUserDetail = false
     
-    private let mockUsers = MockData.tenantUsers
+    private var mockUsers: [User] {
+        // Include current tenant's main user plus additional mock users
+        var users = MockData.tenantUsers
+        if let currentUser = userSession.currentUser {
+            users.insert(currentUser, at: 0)
+        }
+        return users
+    }
     
     private var filteredAndSortedUsers: [User] {
         let filtered = searchText.isEmpty ? mockUsers : mockUsers.filter { user in

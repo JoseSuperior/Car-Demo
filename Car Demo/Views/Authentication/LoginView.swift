@@ -260,16 +260,15 @@ struct LoginView: View {
         // Mock login - any email/password combination works
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
             isLoading = false
-            // Store mock login state
-            UserDefaults.standard.set(true, forKey: "isLoggedIn")
-            UserDefaults.standard.set(email, forKey: "userEmail")
-            // Determine user type based on email domain for demo purposes
-            let isSuperAdmin = email.lowercased().contains("admin") || email.lowercased().contains("super")
-            UserDefaults.standard.set(isSuperAdmin, forKey: "isSuperAdmin")
             
-            // Notify that login state changed
-            NotificationCenter.default.post(name: .init("LoginStateChanged"), object: nil)
-            dismiss()
+            // Use the new UserSession system
+            let success = UserSession.shared.login(email: email, password: password)
+            
+            if success {
+                // Notify that login state changed
+                NotificationCenter.default.post(name: .init("LoginStateChanged"), object: nil)
+                dismiss()
+            }
         }
     }
     

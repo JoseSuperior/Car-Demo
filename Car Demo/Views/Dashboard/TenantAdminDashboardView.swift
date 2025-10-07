@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct TenantAdminDashboardView: View {
+    @EnvironmentObject var userSession: UserSession
     @State private var selectedTab = 0
     @State private var showingLogoutAlert = false
     @State private var switchingToSuperAdmin = false
@@ -21,7 +22,10 @@ struct TenantAdminDashboardView: View {
                         showingLogoutAlert = true
                     },
                     onSwitchToSuperAdmin: {
-                        switchingToSuperAdmin = true
+                        // Only allow if user can switch views
+                        if userSession.canSwitchViews && userSession.switchToSuperAdminView() {
+                            switchingToSuperAdmin = true
+                        }
                     }
                 )
                 
@@ -59,23 +63,29 @@ struct TenantAdminDashboardView: View {
     }
     
     private func handleLogout() {
-        UserDefaults.standard.removeObject(forKey: "isLoggedIn")
-        UserDefaults.standard.removeObject(forKey: "isSuperAdmin")
-        UserDefaults.standard.removeObject(forKey: "userEmail")
+        userSession.logout()
         NotificationCenter.default.post(name: .init("LoginStateChanged"), object: nil)
     }
 }
 
 // MARK: - Tenant Admin Header
 struct TenantAdminHeaderView: View {
+    @EnvironmentObject var userSession: UserSession
     let onLogout: () -> Void
     let onSwitchToSuperAdmin: () -> Void
-    @State private var currentTenant = MockData.tenants.first!
     @State private var showingProfileMenu = false
-    @State private var isSuperAdmin = UserDefaults.standard.bool(forKey: "isSuperAdmin")
+    
+    private var currentTenant: Tenant {
+        return userSession.currentTenant ?? MockData.tenants.first!
+    }
     
     var body: some View {
         VStack(spacing: 0) {
+            // Super Admin Context Banner (if applicable)
+            if userSession.isSuperAdmin && userSession.currentTenant != nil {
+                SuperAdminContextBanner()
+            }
+            
             // Main Header - Completely Redesigned
             HStack(alignment: .center, spacing: 16) {
                 // Practice Logo and Info
@@ -134,9 +144,9 @@ struct TenantAdminHeaderView: View {
                     Menu {
                         // User Info Section
                         VStack(alignment: .leading, spacing: 4) {
-                            Text(currentTenant.mainUser.fullName)
+                            Text(userSession.displayName)
                                 .font(.system(size: 14, weight: .semibold))
-                            Text(currentTenant.mainUser.email)
+                            Text(userSession.displayEmail)
                                 .font(.system(size: 12))
                                 .foregroundColor(.textSecondary)
                         }
@@ -160,7 +170,7 @@ struct TenantAdminHeaderView: View {
                         Divider()
                         
                         // Switch to Super Admin (only if user has permissions)
-                        if isSuperAdmin {
+                        if userSession.canSwitchViews {
                             Button {
                                 onSwitchToSuperAdmin()
                             } label: {
@@ -203,7 +213,7 @@ struct TenantAdminHeaderView: View {
                                 Circle()
                                     .fill(Color.carPrimary.opacity(0.15))
                                     .overlay(
-                                        Text(currentTenant.mainUser.firstName.prefix(1).uppercased())
+                                        Text(userSession.currentUser?.firstName.prefix(1).uppercased() ?? "U")
                                             .font(.system(size: 13, weight: .semibold))
                                             .foregroundColor(.carPrimary)
                                     )
@@ -211,7 +221,7 @@ struct TenantAdminHeaderView: View {
                             .frame(width: 32, height: 32)
                             .clipShape(Circle())
                             
-                            Text(currentTenant.mainUser.firstName)
+                            Text(userSession.currentUser?.firstName ?? "User")
                                 .font(.system(size: 13, weight: .medium))
                                 .foregroundColor(.textPrimary)
                                 .lineLimit(1)
@@ -343,6 +353,72 @@ struct TenantAdminTabBar: View {
     }
 }
 
+// MARK: - Super Admin Context Banner
+struct SuperAdminContextBanner: View {
+    @EnvironmentObject var userSession: UserSession
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            // Crown Icon
+            Image(systemName: "crown.fill")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundColor(.warning)
+            
+            // Context Text
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Super Admin View")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.textPrimary)
+                
+                Text("You are viewing \(userSession.currentTenant?.practiceName ?? "this tenant")'s dashboard")
+                    .font(.system(size: 12))
+                    .foregroundColor(.textSecondary)
+            }
+            
+            Spacer()
+            
+            // Back to Super Admin Button
+            Button(action: {
+                if userSession.switchToSuperAdminView() {
+                    // The view will automatically update due to @EnvironmentObject
+                }
+            }) {
+                HStack(spacing: 6) {
+                    Image(systemName: "arrow.left")
+                        .font(.system(size: 12, weight: .semibold))
+                    
+                    Text("Back to Super Admin")
+                        .font(.system(size: 13, weight: .semibold))
+                }
+                .foregroundColor(.carPrimary)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(Color.carPrimary.opacity(0.1))
+                .cornerRadius(8)
+            }
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 12)
+        .background(
+            LinearGradient(
+                gradient: Gradient(colors: [
+                    Color.warning.opacity(0.1),
+                    Color.warning.opacity(0.05)
+                ]),
+                startPoint: .leading,
+                endPoint: .trailing
+            )
+        )
+        .overlay(
+            Rectangle()
+                .fill(Color.warning.opacity(0.3))
+                .frame(height: 1),
+            alignment: .bottom
+        )
+    }
+}
+
 #Preview {
     TenantAdminDashboardView()
+        .environmentObject(UserSession.shared)
 }
