@@ -76,50 +76,39 @@ struct TenantAdminHeaderView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // Main Header
+            // Main Header - Completely Redesigned
             HStack(alignment: .center, spacing: 16) {
                 // Practice Logo and Info
                 HStack(spacing: 12) {
-                    // Logo with shadow
+                    // Logo
                     AsyncImage(url: URL(string: currentTenant.logoUrl ?? "")) { image in
                         image
                             .resizable()
                             .aspectRatio(contentMode: .fill)
                     } placeholder: {
-                        ZStack {
-                            Circle()
-                                .fill(
-                                    LinearGradient(
-                                        gradient: Gradient(colors: [
-                                            Color.carPrimary.opacity(0.8),
-                                            Color.carPrimary
-                                        ]),
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                )
-                            
-                            Text(currentTenant.practiceName.prefix(1).uppercased())
-                                .font(.system(size: 20, weight: .bold))
-                                .foregroundColor(.white)
-                        }
+                        Circle()
+                            .fill(Color.carPrimary)
+                            .overlay(
+                                Text(currentTenant.practiceName.prefix(1).uppercased())
+                                    .font(.system(size: 16, weight: .semibold))
+                                    .foregroundColor(.white)
+                            )
                     }
-                    .frame(width: 48, height: 48)
+                    .frame(width: 40, height: 40)
                     .clipShape(Circle())
-                    .shadow(color: Color.carPrimary.opacity(0.3), radius: 8, x: 0, y: 2)
                     
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: 3) {
                         Text(currentTenant.practiceName)
-                            .font(.system(size: 22, weight: .bold))
+                            .font(.system(size: 16, weight: .semibold))
                             .foregroundColor(.textPrimary)
                             .lineLimit(1)
                         
-                        HStack(spacing: 6) {
+                        HStack(spacing: 4) {
                             Image(systemName: "building.2")
-                                .font(.system(size: 11, weight: .medium))
+                                .font(.system(size: 9, weight: .medium))
                             
                             Text("Tenant Dashboard")
-                                .font(.system(size: 13, weight: .medium))
+                                .font(.system(size: 11, weight: .regular))
                         }
                         .foregroundColor(.textSecondary)
                     }
@@ -127,46 +116,18 @@ struct TenantAdminHeaderView: View {
                 
                 Spacer()
                 
-                // Action Buttons
+                // Right Side Actions - Completely Simplified
                 HStack(spacing: 10) {
-                    // Account Type Badge (iOS style)
-                    HStack(spacing: 6) {
-                        Circle()
-                            .fill(accountTypeColor)
-                            .frame(width: 6, height: 6)
-                        
-                        Text(currentTenant.accountType.displayName)
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundColor(.textPrimary)
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 7)
-                    .background(accountTypeColor.opacity(0.1))
-                    .cornerRadius(20)
-                    
                     // Primary Action Button
                     Button(action: {
                         // Handle primary action
                     }) {
-                        HStack(spacing: 6) {
-                            Image(systemName: primaryActionIcon)
-                                .font(.system(size: 14, weight: .semibold))
-                            
-                            Text(primaryActionTitle)
-                                .font(.system(size: 14, weight: .semibold))
-                        }
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 10)
-                        .background(
-                            LinearGradient(
-                                gradient: Gradient(colors: [Color.carPrimary, Color.carPrimary.opacity(0.85)]),
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                        )
-                        .cornerRadius(10)
-                        .shadow(color: Color.carPrimary.opacity(0.3), radius: 6, x: 0, y: 3)
+                        Image(systemName: primaryActionIcon)
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(.white)
+                            .frame(width: 40, height: 40)
+                            .background(Color.carPrimary)
+                            .clipShape(Circle())
                     }
                     
                     // Profile Menu Button
@@ -180,6 +141,21 @@ struct TenantAdminHeaderView: View {
                                 .foregroundColor(.textSecondary)
                         }
                         .padding(.vertical, 8)
+                        
+                        Divider()
+                        
+                        // Account Type
+                        Button {
+                            // View account details
+                        } label: {
+                            HStack {
+                                Label(currentTenant.accountType.displayName + " Plan", systemImage: "star.fill")
+                                Spacer()
+                                Circle()
+                                    .fill(accountTypeColor)
+                                    .frame(width: 8, height: 8)
+                            }
+                        }
                         
                         Divider()
                         
@@ -217,45 +193,43 @@ struct TenantAdminHeaderView: View {
                             Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
                         }
                     } label: {
-                        HStack(spacing: 10) {
+                        HStack(spacing: 6) {
                             // Avatar
-                            ZStack {
+                            AsyncImage(url: URL(string: currentTenant.mainUser.profileImageUrl ?? "")) { image in
+                                image
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                            } placeholder: {
                                 Circle()
-                                    .fill(
-                                        LinearGradient(
-                                            gradient: Gradient(colors: [
-                                                Color.carPrimary.opacity(0.15),
-                                                Color.carPrimary.opacity(0.1)
-                                            ]),
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        )
+                                    .fill(Color.carPrimary.opacity(0.15))
+                                    .overlay(
+                                        Text(currentTenant.mainUser.firstName.prefix(1).uppercased())
+                                            .font(.system(size: 13, weight: .semibold))
+                                            .foregroundColor(.carPrimary)
                                     )
-                                    .frame(width: 36, height: 36)
-                                
-                                Text(currentTenant.mainUser.firstName.prefix(1).uppercased())
-                                    .font(.system(size: 15, weight: .semibold))
-                                    .foregroundColor(.carPrimary)
                             }
+                            .frame(width: 32, height: 32)
+                            .clipShape(Circle())
                             
-                            // Chevron
+                            Text(currentTenant.mainUser.firstName)
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundColor(.textPrimary)
+                                .lineLimit(1)
+                            
                             Image(systemName: "chevron.down")
-                                .font(.system(size: 11, weight: .semibold))
+                                .font(.system(size: 9, weight: .semibold))
                                 .foregroundColor(.textSecondary)
                         }
                         .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
-                        .background(Color.backgroundSecondary)
-                        .cornerRadius(20)
+                        .padding(.vertical, 8)
+                        .background(Color.gray100)
+                        .clipShape(Capsule())
                     }
                 }
             }
-            .padding(.horizontal, 24)
+            .padding(.horizontal, 20)
             .padding(.vertical, 16)
-            .background(
-                Color.white
-                    .shadow(color: Color.black.opacity(0.05), radius: 1, x: 0, y: 1)
-            )
+            .background(Color.white)
             
             // Account Status Banner (if needed)
             if currentTenant.missedPayment {
